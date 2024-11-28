@@ -321,18 +321,31 @@ if __name__ == '__main__':
 	print(f'{color.HEADER}Testing {args.model} on {args.dataset}{color.ENDC}')
 	loss, y_pred = backprop(0, model, testD, testO, optimizer, scheduler, training=False)
 
-	### Plot curves
+	### Plot curves		df = pd.concat([df, result], ignore_index=True)
 	if not args.test:
 		if 'TranAD' in model.name: testO = torch.roll(testO, 1, 0) 
 		plotter(f'{args.model}_{args.dataset}', testO, y_pred, loss, labels)
 
-	### Scores
-	df = pd.DataFrame()
+		### Scores
+	df = pd.DataFrame()  # Initialize an empty DataFrame
 	lossT, _ = backprop(0, model, trainD, trainO, optimizer, scheduler, training=False)
+
+	# Loop through columns of loss and process results
 	for i in range(loss.shape[1]):
 		lt, l, ls = lossT[:, i], loss[:, i], labels[:, i]
-		result, pred = pot_eval(lt, l, ls); preds.append(pred)
-		df = df.append(result, ignore_index=True)
+		result, pred = pot_eval(lt, l, ls)
+		preds.append(pred)
+
+		# Ensure result is a DataFrame (if it is a dictionary or another type)
+# Ensure result is a DataFrame (if it is a dictionary or another type)
+		if isinstance(result, dict):
+			result = pd.DataFrame(result, index=[0])  # Specify index if the values are scalar
+
+		# Concatenate the result to the main DataFrame
+		df = pd.concat([df, result], ignore_index=True)
+
+
+
 	# preds = np.concatenate([i.reshape(-1, 1) + 0 for i in preds], axis=1)
 	# pd.DataFrame(preds, columns=[str(i) for i in range(10)]).to_csv('labels.csv')
 	lossTfinal, lossFinal = np.mean(lossT, axis=1), np.mean(loss, axis=1)
